@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Laptop Recommendations</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+<div id="overlay" class="overlay hidden"></div>
+<!-- TOP BANNER -->
+<div class="top-banner">
+    <span class="main-text">The laptop you want is</span>
+    <span class="highlight">right here ✨</span>
+</div>
+
+<div class="main-wrapper">
+
+    <!-- INPUT BOX -->
+    <div class="input-box center" id="inputBox">
+        <h2>Your Needs</h2>
+
+        <input type="number" id="min" placeholder="Min Budget">
+        <input type="number" id="max" placeholder="Max Budget">
+
+        <select id="brand">
+            <option value="">All Brands</option>
+            <option>Dell</option>
+            <option>HP</option>
+            <option>Lenovo</option>
+            <option>Asus</option>
+            <option>Acer</option>
+            <option>Apple</option>
+        </select>
+
+        <select id="processor">
+            <option value="">All Processors</option>
+            <option>i3</option>
+            <option>i5</option>
+            <option>i7</option>
+            <option>Ryzen 5</option>
+            <option>Ryzen 7</option>
+        </select>
+
+        <select id="ram">
+            <option value="">All RAM</option>
+            <option>4</option>
+            <option>8</option>
+            <option>16</option>
+            <option>32</option>
+        </select>
+
+        <label>Performance</label>
+	<div class="range-labels">
+    	<span>Low</span>
+    	<span>Medium</span>
+    	<span>High</span>
+	</div>
+	<input type="range" id="performance" min="0" max="100" value="50">
+
+	<label>Battery</label>
+	<div class="range-labels">
+    	<span>Low</span>
+    	<span>Medium</span>
+   	<span>High</span>
+	</div>
+	<input type="range" id="battery" min="0" max="100" value="50">
+
+	<label>Portability</label>
+	<div class="range-labels">
+    	<span>Low</span>
+    	<span>Medium</span>
+    	<span>High</span>
+	</div>
+	<input type="range" id="portability" min="0" max="100" value="50">
+
+        <select id="sort">
+            <option value="best">Best Match</option>
+            <option value="low">Price Low → High</option>
+            <option value="high">Price High → Low</option>
+        </select>
+
+        <button class="find-btn" onclick="findLaptops()">Find Laptops</button>
+    </div>
+    <div id="loader" class="loader hidden">
+    <div></div>
+    <div></div>
+    <div></div>
+</div>
+
+    <!-- RESULTS -->
+    <div class="results" id="results"></div>
+
+</div>
+
+<script>
+function getRandomRating() {
+    return (Math.random() * (5 - 3.9) + 3.9).toFixed(1);
+}
+
+function findLaptops(){
+    let box = document.getElementById("inputBox");
+    box.classList.remove("center");
+    box.classList.add("slide-left");
+    document.getElementById("loader").classList.remove("hidden");
+    document.getElementById("overlay").classList.remove("hidden");
+
+    fetch('/recommend', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+            budget_min:document.getElementById('min').value,
+            budget_max:document.getElementById('max').value,
+            brand:document.getElementById('brand').value,
+            processor:document.getElementById('processor').value,
+            ram:document.getElementById('ram').value,
+            performance:document.getElementById('performance').value,
+            battery:document.getElementById('battery').value,
+            portability:document.getElementById('portability').value,
+            sort:document.getElementById('sort').value
+        })
+    })
+    .then(res=>res.json())
+    .then(data=>{
+        let html = "";
+        data.forEach(lap=>{
+            
+            let rating = lap.rating ? lap.rating : getRandomRating();
+
+            html += `
+            <div class="card">
+                <img src="${lap.image}"/>
+                <div class="info">
+                    <h3>${lap.name}</h3>
+                    <p>${lap.specs}</p>
+                    <p>₹ ${lap.price}</p>
+                    <p>⭐ ${rating}</p>
+
+                    <p class="why">
+                        Recommended because it matches your needs in performance, battery, and portability.
+                    </p>
+
+                    <span class="badge">${lap.badge}</span>
+                    <a href="${lap.link}" target="_blank">Buy Now</a>
+                </div>
+            </div>`;
+        });
+        document.getElementById("results").innerHTML = html;
+	document.getElementById("loader").classList.add("hidden");
+	document.getElementById("overlay").classList.add("hidden");
+    });
+}
+</script>
+
+</body>
+</html>
